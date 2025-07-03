@@ -1,5 +1,8 @@
 import express from "express"
 import cors from "cors"
+import error from "./middlewares/error.middleware.js"
+import notFound from "./middlewares/notFound.middleware.js"
+import authRouter from "./routes/auth.route.js"
 
 const app = express()
 
@@ -9,10 +12,10 @@ app.use(cors({
 }))
 
 
-app.use("/", (req, res) => {
-    res.send("Welcome to the Movie Booking API!")
-})
+app.use("/auth", authRouter)
 
+app.use(error)
+app.use(notFound)
 
 export default app
 

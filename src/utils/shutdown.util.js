@@ -1,4 +1,4 @@
-import prisma from "../prisma/client.js";
+import prisma from "../config/prisma.config.js";
 
 export default async function(signals) {
     console.log(`Received shutdown signal: ${signals}`);
