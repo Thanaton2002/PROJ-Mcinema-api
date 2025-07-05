@@ -12,7 +12,8 @@ app.use(cors({
 }))
 
 
-app.use("/auth", authRouter)
+app.use("/api/auth", authRouter)
+app.use("/api/movies", authRouter)
 
 app.use(error)
 app.use(notFound)

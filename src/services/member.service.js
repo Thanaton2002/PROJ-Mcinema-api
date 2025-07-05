@@ -11,3 +11,9 @@ export function createMember(memberData) {
         data: memberData,
     });
 }
+
+export function getMemberById(id) {
+    return prisma.member.findUnique({
+        where: { id },
+    });
+}
