@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
   output   = "../src/generated/prisma"
@@ -14,114 +8,174 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
-  Admin
-  User
+model booking {
+  id          Int            @id @unique(map: "Booking_id_key") @default(autoincrement())
+  memberId    Int            @map("member_id")
+  showtimeId  Int            @map("showtime_id")
+  bookingDate DateTime       @default(now()) @map("booking_date")
+  amountSeats Int            @map("amount_seats")
+  status      booking_status @default(Pending)
+
+  @@index([memberId], map: "Booking_member_id_fkey")
+  @@index([showtimeId], map: "Booking_showtime_id_fkey")
 }
 
-enum Status {
+model member {
+  id          Int           @id @unique(map: "Member_id_key") @default(autoincrement())
+  email       String        @unique(map: "Member_email_key")
+  password    String
+  firstName   String?       @map("first_name")
+  lastName    String?       @map("last_name")
+  birthDate   DateTime?     @map("birth_date")
+  phoneNumber String?       @map("phone_number")
+  createDate  DateTime      @default(now())
+  role        member_role   @default(User)
+  status      member_status @default(Available)
+}
+
+model movie {
+  id          Int          @id @unique(map: "Movie_id_key") @default(autoincrement())
+  name        String
+  genre       String
+  duration    Int
+  status      movie_status @default(NotAvailable)
+  releaseDate DateTime     @map("release_date")
+  imageUrl    String?      @map("image_url")
+  showtime    showtime[]
+}
+
+model payment {
+  id            Int                     @id @unique(map: "Payment_id_key") @default(autoincrement())
+  bookingId     Int                     @map("booking_id")
+  amount        Float
+  paymentDate   DateTime?               @map("payment_date")
+  paymentMethod payment_payment_method? @map("payment_method")
+  status        payment_status          @default(Pending)
+
+  @@index([bookingId], map: "Payment_booking_id_fkey")
+}
+
+model seat {
+  id        Int         @id @unique(map: "Seat_id_key") @default(autoincrement())
+  theaterId Int         @map("theater_id")
+  row       String
+  column    String
+  status    seat_status @default(Available)
+
+  @@index([theaterId], map: "Seat_theater_id_fkey")
+}
+
+model seatbooking {
+  id        Int                @id @unique(map: "SeatBooking_id_key") @default(autoincrement())
+  bookingId Int                @map("booking_id")
+  seatId    Int                @map("seat_id")
+  status    seatbooking_status @default(Available)
+
+  @@index([bookingId], map: "SeatBooking_booking_id_fkey")
+  @@index([seatId], map: "SeatBooking_seat_id_fkey")
+}
+
+model showtime {
+  id           Int             @id @unique(map: "Showtime_id_key") @default(autoincrement())
+  movieId      Int             @map("movie_id")
+  theaterId    Int             @map("theater_id")
+  startTime    DateTime        @map("start_time")
+  endTime      DateTime        @map("end_time")
+  status       showtime_status @default(Available)
+  audioType    audio_type?     @map("audio_type")
+  subtitleType subtitle_type?  @map("subtitle_type")
+
+  movie   movie   @relation(fields: [movieId], references: [id])
+  theater theater @relation(fields: [theaterId], references: [id])
+
+  @@index([movieId], map: "Showtime_movie_id_fkey")
+  @@index([theaterId], map: "Showtime_theater_id_fkey")
+}
+
+model theater {
+  id       Int            @id @unique(map: "Theater_id_key") @default(autoincrement())
+  name     String
+  type     String
+  capacity Int
+  status   theater_status @default(Available)
+  showtime showtime[]
+}
+
+enum audio_type {
+  Thai
+  Soundtrack
+  English
+}
+
+enum subtitle_type {
+  Thai
+  English
+  None
+}
+
+enum payment_payment_method {
+  CreditCard
+  DebitCard
+  BankTransfer
+}
+
+enum payment_status {
   Available
   NotAvailable
   Pending
   Completed
 }
 
-enum PaymentMethod {
-  CreditCard
-  DebitCard
-  BankTransfer
+enum member_role {
+  Admin
+  User
 }
 
-model Member {
-  id          Int       @id @unique @default(autoincrement())
-  email       String    @unique
-  password    String
-  firstName   String?   @map("first_name")
-  lastName    String?   @map("last_name")
-  birthDate   DateTime? @map("birth_date")
-  phoneNumber String?   @map("phone_number")
-  createDate  DateTime  @default(now())
-  role        Role      @default(User)
-  status      Status    @default(Available)
-  Booking     Booking[]
+enum seatbooking_status {
+  Available
+  NotAvailable
+  Pending
+  Completed
 }
 
-
-model Movie {
-  id          Int        @id @unique @default(autoincrement())
-  name        String
-  genre       String
-  duration    Int
-  status      Status     @default(Available)
-  releaseDate DateTime   @map("release_date")
-  Showtime    Showtime[]
+enum seat_status {
+  Available
+  NotAvailable
+  Pending
+  Completed
 }
 
-model Theater {
-  id       Int        @id @unique @default(autoincrement())
-  name     String
-  type     String
-  capacity Int
-  status   Status     @default(Available)
-  Seat     Seat[]
-  Showtime Showtime[]
+enum movie_status {
+  Available
+  NotAvailable
+  Pending
+  Completed
 }
 
-model Seat {
-  id        Int    @id @unique @default(autoincrement())
-  theaterId Int    @map("theater_id")
-  row       String
-  column    String
-  status    Status @default(Available)
-
-  theater     Theater       @relation(fields: [theaterId], references: [id])
-  SeatBooking SeatBooking[]
+enum theater_status {
+  Available
+  NotAvailable
+  Pending
+  Completed
 }
 
-model Showtime {
-  id        Int      @id @unique @default(autoincrement())
-  movieId   Int      @map("movie_id")
-  theaterId Int      @map("theater_id")
-  startTime DateTime @map("start_time")
-  endTime   DateTime @map("end_time")
-  status    Status   @default(Available)
-
-  movie   Movie     @relation(fields: [movieId], references: [id])
-  theater Theater   @relation(fields: [theaterId], references: [id])
-  Booking Booking[]
+enum booking_status {
+  Available
+  NotAvailable
+  Pending
+  Completed
 }
 
-model Booking {
-  id          Int      @id @unique @default(autoincrement())
-  memberId    Int      @map("member_id")
-  showtimeId  Int      @map("showtime_id")
-  bookingDate DateTime @default(now()) @map("booking_date")
-  amountSeats Int      @map("amount_seats")
-  status      Status   @default(Pending)
-
-  member      Member        @relation(fields: [memberId], references: [id])
-  showtime    Showtime      @relation(fields: [showtimeId], references: [id])
-  Payment     Payment[]
-  SeatBooking SeatBooking[]
+enum showtime_status {
+  Available
+  NotAvailable
+  Pending
+  Completed
 }
 
-model SeatBooking {
-  id        Int    @id @unique @default(autoincrement())
-  bookingId Int    @map("booking_id")
-  seatId    Int    @map("seat_id")
-  status    Status @default(Available)
-
-  booking Booking @relation(fields: [bookingId], references: [id])
-  seat    Seat    @relation(fields: [seatId], references: [id])
-}
-
-model Payment {
-  id          Int      @id @unique @default(autoincrement())
-  bookingId   Int      @map("booking_id")
-  amount      Float
-  paymentDate DateTime? @map("payment_date")
-  paymentMethod PaymentMethod? @map("payment_method")
-  status      Status   @default(Pending)
-
-  booking Booking @relation(fields: [bookingId], references: [id])
+enum member_status {
+  Available
+  NotAvailable
+  Pending
+  Completed
 }

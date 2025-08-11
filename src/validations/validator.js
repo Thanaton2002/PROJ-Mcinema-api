@@ -10,7 +10,12 @@ export const registerSchema = object({
     confirmPassword: string()
         .oneOf([ref("password"), null], "รหัสผ่านไม่ตรงกัน"),
     phoneNumber: string()
-        .matches(/^\d{10}$/, "หมายเลขโทรศัพท์ต้องมี 10 หลัก")
+        .notRequired()
+        .nullable()
+        .when({
+            is: (val) => val && val.length > 0,
+            then: (schema) => schema.matches(/^\d{10}$/, "หมายเลขโทรศัพท์ต้องมี 10 หลัก"),
+        })
 })
 
 export const validator = (schema) => async (req, res, next) => {
